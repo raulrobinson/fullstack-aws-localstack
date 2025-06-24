@@ -78,19 +78,19 @@ Development Services System for AWS LocalStack
     - **Username**: `admin`
     - **Password**: `admin123`   
 
-   <img src="dashboard-ui/documentation/images/login.png" alt="Login" width="400"/>
+   <img src="dashboard-ui/documentation/images/login.png" alt="Login" width="800"/>
 
    ### Accessing Home Page
-   <img src="dashboard-ui/documentation/images/img.png" alt="Dashboard" width="400"/>
+   <img src="dashboard-ui/documentation/images/img.png" alt="Dashboard" width="800"/>
 
    ### Accessing Status Page
-   <img src="dashboard-ui/documentation/images/img_1.png" alt="Status" width="400"/>
+   <img src="dashboard-ui/documentation/images/img_1.png" alt="Status" width="800"/>
 
    ### Accessing Resource Browser
-   <img src="dashboard-ui/documentation/images/img_2.png" alt="Status" width="400"/>
+   <img src="dashboard-ui/documentation/images/img_2.png" alt="Status" width="800"/>
 
    ### Accessing DynamoDB Browser
-   <img src="dashboard-ui/documentation/images/img_3.png" alt="Status" width="400"/>
+   <img src="dashboard-ui/documentation/images/img_3.png" alt="Status" width="800"/>
 
 
 9. Access the backend API:
