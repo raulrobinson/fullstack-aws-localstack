@@ -73,6 +73,25 @@ Development Services System for AWS LocalStack
 8. Access the application:
    Open your web browser and navigate to `http://localhost:4200`.
 
+   ### Accessing Dashboard UI      
+   login to the dashboard UI using the following credentials:
+    - **Username**: `admin`
+    - **Password**: `admin123`   
+
+   <img src="dashboard-ui/documentation/images/login.png" alt="Login" width="400"/>
+
+   ### Accessing Home Page
+   <img src="dashboard-ui/documentation/images/img.png" alt="Dashboard" width="400"/>
+
+   ### Accessing Status Page
+   <img src="dashboard-ui/documentation/images/img_1.png" alt="Status" width="400"/>
+
+   ### Accessing Resource Browser
+   <img src="dashboard-ui/documentation/images/img_2.png" alt="Status" width="400"/>
+
+   ### Accessing DynamoDB Browser
+   <img src="dashboard-ui/documentation/images/img_3.png" alt="Status" width="400"/>
+
 
 9. Access the backend API:
    Use Postman or any API testing tool to access the backend API at `http://localhost:9800/webjars/swagger-ui/index.html`.
