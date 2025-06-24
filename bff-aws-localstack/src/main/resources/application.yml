@@ -1,0 +1,43 @@
+# [APP General Configuration]
+server:
+  port: 9900
+  error:
+    include-message: always
+    include-binding-errors: always
+info:
+  project-version: "@projectVersion@"
+  build-timestamp: "@buildTimestamp@"
+
+# [SPRING CLOUD]
+spring:
+  application:
+    name: "@projectName@"
+  config:
+    import: optional:classpath:routes.yml
+
+# [CUSTOM HEADER]
+custom:
+  header:
+    name: X-Request-ID
+    value: f4a4fd8d-43ae-4365-bb71-038c34d06881
+allowed:
+  origins:
+    - http://localhost:4200
+    - http://localhost:3000
+    - https://www.rasysbox.com
+
+# [METRICS]
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      status:
+        http-mapping:
+          down: 500
+      show-details: always
+  http exchanges:
+    recording:
+      include: request-headers,time-taken,session-id

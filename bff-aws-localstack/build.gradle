@@ -1,0 +1,102 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
+}
+
+group = 'com.aws'
+version = '0.0.1-SNAPSHOT'
+description = 'Microservicio Backend-For-Frontend para el AWS LocalStack.'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('springCloudVersion', "2025.0.0")
+    projectName = project.name
+    projectVersion = project.version
+    buildTimestamp = new Date().format("yyyy-MM-dd'T'HH:mm:ss")
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.cloud:spring-cloud-starter'
+    implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webflux'
+    compileOnly 'org.projectlombok:lombok'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+bootJar {
+    archiveFileName = "${rootProject.name}.jar"
+}
+
+processResources {
+    inputs.properties([
+            'projectName': projectName,
+            'projectVersion': projectVersion,
+            'buildTimestamp': buildTimestamp
+    ])
+
+    filesMatching("**/application*.yml") {
+        expand([
+                'projectName': projectName,
+                'projectVersion': projectVersion,
+                'buildTimestamp': buildTimestamp
+        ])
+    }
+
+    filesMatching("**/application*.properties") {
+        expand([
+                'projectName': projectName,
+                'projectVersion': projectVersion,
+                'buildTimestamp': buildTimestamp
+        ])
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

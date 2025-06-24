@@ -1,0 +1,24 @@
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: users-local
+              uri: http://localhost:9801
+              predicates:
+                - Path=/api/auth/**
+              filters:
+                - RewritePath=/api/auth/(?<path>.*), /api/auth/\${path}
+            - id: dynamodb-local
+              uri: http://localhost:9800
+              predicates:
+                - Path=/api/dynamodb/**
+              filters:
+                - RewritePath=/api/dynamodb/(?<path>.*), /api/dynamodb/\${path}
+            - id: sqs-local
+              uri: http://localhost:9800
+              predicates:
+                - Path=/api/sqs/**
+              filters:
+                - RewritePath=/api/sqs/(?<path>.*), /api/sqs/\${path}
