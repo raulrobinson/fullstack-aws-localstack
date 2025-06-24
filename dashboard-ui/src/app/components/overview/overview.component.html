@@ -1,0 +1,29 @@
+<!-- overview.component.html -->
+<div class="p-6 bg-white rounded shadow">
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+    <div class="bg-green-100 text-green-800 p-4 rounded shadow flex flex-col">
+      <span class="text-sm font-semibold uppercase">Servicios activos</span>
+      <span class="text-3xl font-bold mt-2">{{ stats().running }}</span>
+    </div>
+
+    <div class="bg-yellow-100 text-yellow-800 p-4 rounded shadow flex flex-col">
+      <span class="text-sm font-semibold uppercase">Disponibles</span>
+      <span class="text-3xl font-bold mt-2">{{ stats().available }}</span>
+    </div>
+
+    <div class="bg-red-100 text-red-800 p-4 rounded shadow flex flex-col">
+      <span class="text-sm font-semibold uppercase">Deshabilitados</span>
+      <span class="text-3xl font-bold mt-2">{{ stats().disabled }}</span>
+    </div>
+
+    <div class="bg-gray-100 text-gray-800 p-4 rounded shadow flex flex-col">
+      <span class="text-sm font-semibold uppercase">Total Servicios</span>
+      <span class="text-3xl font-bold mt-2">{{ stats().total }}</span>
+    </div>
+  </div>
+
+  <div class="mt-6 text-sm text-gray-600">
+    Versión LocalStack: <strong>{{ health()?.version }}</strong>
+    ({{ health()?.edition }})
+  </div>
+</div>

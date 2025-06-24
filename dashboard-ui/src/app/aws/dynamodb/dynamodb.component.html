@@ -1,0 +1,91 @@
+<div class="p-6 font-sans">
+  <!-- Header -->
+  <div (click)="reloadPage()" class="text-center mb-6 cursor-pointer">
+    <h1 class="text-2xl font-bold mb-4 flex items-center justify-center space-x-4">
+      <img
+        src="assets/images/amazon-dynamodb.png"
+        alt="Logo"
+        class="h-12"
+      />
+      <span>DynamoDB Manager</span>
+    </h1>
+  </div>
+
+  <!-- Botón crear tabla
+  <app-create-table-button (tableCreated)="fetchTables()" />-->
+  <!--<app-create-item-form
+    [tableName]="selectedTable()"
+    [fields]="getFieldsForTable(selectedTable())"
+    (created)="fetchItems(selectedTable()!)"
+  />-->
+
+  <div class="flex gap-8">
+    <!-- Lista de tablas -->
+    <div class="w-1/3">
+      <h3 class="font-semibold mb-2">Tablas</h3>
+
+      @if (loading()) {
+        <p class="text-gray-500">Cargando...</p>
+      } @else {
+        @if (tables().length > 0) {
+          <ul class="space-y-2">
+            @for (table of tables(); track table) {
+              <li
+                class="flex justify-between items-center bg-gray-100 px-3 py-2 rounded"
+              >
+                <button
+                  (click)="fetchItems(table)"
+                  class="text-sm font-medium text-left flex-1 hover:underline"
+                >
+                  {{ table }}
+                </button>
+
+                <app-confirm-dialog
+                  [message]="'¿Estás seguro de eliminar la tabla ' + table + '?'"
+                  (confirm)="deleteTable(table)"
+                >
+                  <lucide-angular [img]="trash" color="red" class="my-icon"></lucide-angular>
+                </app-confirm-dialog>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="text-sm text-gray-500">No hay tablas disponibles.</p>
+        }
+      }
+    </div>
+
+    <!-- Items -->
+    <div class="w-2/3">
+      <h3 class="font-semibold mb-2">Items en: {{ selectedTable() }}</h3>
+
+      <div class="overflow-auto max-h-[60vh] border rounded p-3 bg-white space-y-2">
+        @if (selectedTable() === 'Clients') {
+          <app-create-client-form (created)="fetchItems(selectedTable()!)" />
+        }
+        @if (items().length > 0) {
+          @for (item of items(); track item['id']) {
+            <div class="flex justify-between items-start border p-2 rounded bg-gray-50 text-sm">
+              <pre class="whitespace-pre-wrap">{{ item | json }}</pre>
+              <button
+                class="text-red-500 text-xs"
+                (click)="deleteItem(item)"
+                title="Eliminar item"
+              >
+                <lucide-angular [img]="trash" color="red" class="my-icon"></lucide-angular>
+              </button>
+            </div>
+          }
+        } @else {
+        <p class="text-gray-500 text-sm">No hay items</p>
+      }
+      </div>
+    </div>
+  </div>
+
+  <app-toast
+    [message]="toastMessage"
+    [type]="toastType"
+    [visible]="toastVisible"
+  ></app-toast>
+</div>

@@ -1,0 +1,18 @@
+<form (submit)="submit()" class="flex flex-col gap-4 mb-4">
+  <div *ngFor="let field of fields">
+    <label class="text-sm font-medium block mb-1">{{ field.key }}</label>
+    <input
+      [(ngModel)]="item[field.key]"
+      [name]="field.key"
+      [type]="field.type === 'number' ? 'number' : 'text'"
+      class="border px-3 py-1 rounded w-full text-sm"
+    />
+  </div>
+
+  <button
+    type="submit"
+    class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 self-end"
+  >
+    Agregar
+  </button>
+</form>

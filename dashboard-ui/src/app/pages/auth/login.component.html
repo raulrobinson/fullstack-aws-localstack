@@ -1,0 +1,111 @@
+<div class="h-screen flex items-center justify-center bg-gray-100">
+  <div class="bg-white p-8 rounded shadow-md w-full max-w-sm">
+    <!-- Título -->
+    <div class="mb-6">
+      <img
+        src="assets/images/localstack-logo-30.png"
+        alt="Logo"
+        class="mx-auto w-64 h-auto"
+      />
+    </div>
+
+    <form #loginForm="ngForm" (ngSubmit)="login()" class="space-y-4">
+
+      <!-- Usuario -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+        <input
+          type="text"
+          name="username"
+          required
+          minlength="4"
+          maxlength="20"
+          [(ngModel)]="username"
+          #usernameField="ngModel"
+          class="w-full mt-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        @if (usernameField.invalid && usernameField.touched) {
+          <p class="text-sm text-red-600 mt-1">
+            @if (usernameField.errors?.['required']) {
+              <span>El usuario es obligatorio.</span>
+            }
+            @if (usernameField.errors?.['minlength']) {
+              <span>Mínimo 4 caracteres.</span>
+            }
+            @if (usernameField.errors?.['maxlength']) {
+              <span>Máximo 20 caracteres.</span>
+            }
+          </p>
+        }
+      </div>
+
+      <!-- Contraseña -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+        <input
+          type="password"
+          name="password"
+          required
+          minlength="6"
+          [(ngModel)]="password"
+          #passwordField="ngModel"
+          class="w-full mt-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        @if (passwordField.invalid && passwordField.touched) {
+          <p class="text-sm text-red-600 mt-1">
+            @if (passwordField.errors?.['required']) {
+              <span>La contraseña es obligatoria.</span>
+            }
+            @if (passwordField.errors?.['minlength']) {
+              <span>Mínimo 6 caracteres.</span>
+            }
+          </p>
+        }
+      </div>
+
+      <!-- CAPTCHA -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Captcha</label>
+        <div class="flex justify-center items-center bg-gray-100">
+          <div [innerHTML]="sanitizedSvg"></div>
+        </div>
+        <label class="block text-sm font-medium text-gray-700 mt-2">Ingrese el Captcha</label>
+        <input
+          type="text"
+          name="captcha"
+          required
+          [(ngModel)]="captchaInput"
+          #captchaField="ngModel"
+          class="w-full mt-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        @if (captchaField.invalid && captchaField.touched) {
+          <p class="text-sm text-red-600 mt-1">
+            El captcha es obligatorio.
+          </p>
+        }
+      </div>
+
+      <!-- Botón -->
+      <button
+        type="submit"
+        [disabled]="loginForm.invalid"
+        class="w-full bg-blue-600 text-white my-2 py-3 rounded hover:bg-blue-700 disabled:opacity-50"
+      >
+        Iniciar sesión
+      </button>
+
+      <!-- Copyright -->
+      <div class="text-center text-sm text-gray-500 mt-4">
+        <p>by <strong>Raul Bolivar Navas</strong></p>
+        <p>Comparte y Crece.</p>
+        <p>&copy; {{ getYear() }}</p>
+      </div>
+    </form>
+
+    <app-toast
+      [message]="toastMessage"
+      [type]="toastType"
+      [visible]="toastVisible"
+    ></app-toast>
+  </div>
+</div>

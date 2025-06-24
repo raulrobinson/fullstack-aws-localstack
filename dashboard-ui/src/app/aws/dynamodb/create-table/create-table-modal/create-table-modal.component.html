@@ -1,0 +1,39 @@
+<!-- create-table-modal.component.html -->
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-lg shadow p-6 w-full max-w-md">
+    <h2 class="text-lg font-bold mb-4">Crear nueva tabla</h2>
+
+    <form (ngSubmit)="submit()" #form="ngForm">
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-1">Nombre de la tabla</label>
+        <input
+          [(ngModel)]="tableName"
+          name="tableName"
+          required
+          class="w-full px-3 py-2 border rounded"
+        />
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-1">Clave primaria</label>
+        <input
+          [(ngModel)]="primaryKey"
+          name="primaryKey"
+          required
+          class="w-full px-3 py-2 border rounded"
+        />
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button type="button" (click)="close.emit()" class="text-sm text-gray-600">Cancelar</button>
+        <button
+          type="submit"
+          [disabled]="!form.valid"
+          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Crear
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,13 @@
+<button
+  (click)="showModal.set(true)"
+  class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mb-4"
+>
+  Crear tabla
+</button>
+
+@if (showModal()) {
+  <app-create-table-modal
+    (close)="showModal.set(false)"
+    (created)="handleCreated()"
+  />
+}

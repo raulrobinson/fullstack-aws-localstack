@@ -1,0 +1,7 @@
+# [AWS LocalStack Configuration]
+aws:
+  localstack:
+    url: http://localhost:4566  # URL del LocalStack
+    region: us-east-1           # Región por defecto
+    access-key-id: test         # ID de acceso
+    secret-access-key: test     # Clave secreta

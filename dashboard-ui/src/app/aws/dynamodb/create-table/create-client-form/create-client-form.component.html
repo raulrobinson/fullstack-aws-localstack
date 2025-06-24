@@ -1,0 +1,16 @@
+<form (submit)="submit()" class="flex items-center gap-2 mb-4">
+  <input
+    [(ngModel)]="name"
+    name="name"
+    type="text"
+    placeholder="Nombre del cliente"
+    class="border px-3 py-1 rounded w-full text-sm"
+    required
+  />
+  <button
+    type="submit"
+    class="bg-green-600 text-white px-4 py-1 rounded text-sm hover:bg-green-700"
+  >
+    Agregar
+  </button>
+</form>

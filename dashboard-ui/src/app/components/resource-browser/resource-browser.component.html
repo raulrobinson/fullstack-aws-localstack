@@ -1,0 +1,16 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+  @for (resource of resources; track resource) {
+    <div
+      (click)="navigateTo(resource.route)"
+      class="bg-white p-4 rounded shadow cursor-pointer hover:shadow-lg transition"
+    >
+      <img
+        [src]="resource.icon"
+        alt="{{ resource.name }} icon"
+        class="w-12 h-12 mb-2"
+      />
+      <h2 class="text-lg font-bold">{{ resource.name }}</h2>
+      <p class="text-sm text-gray-600">{{ resource.description }}</p>
+    </div>
+  }
+</div>

@@ -1,0 +1,51 @@
+<div class="flex h-screen bg-[#12141b] text-white">
+
+  <!-- Sidebar -->
+  <aside class="w-64 h-screen bg-[#1e2027] flex flex-col justify-between border-r border-gray-800">
+    <div>
+      <div class="p-6 text-xl font-bold text-white tracking-wide">LocalStack UI</div>
+      <app-sidebar></app-sidebar>
+    </div>
+    <app-footer></app-footer>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 bg-[#f5f6f8] text-gray-900 overflow-y-auto">
+    <!-- Header -->
+    <app-header />
+
+    <!-- Content -->
+    <section class="px-6 pt-4">
+      <!-- Tabs de navegación -->
+      <div class="flex space-x-2">
+        <a
+          routerLink="overview"
+          routerLinkActive="bg-white text-blue-600 font-semibold shadow-sm"
+          class="px-4 py-2 rounded-t-md border border-b-0 bg-gray-100 text-gray-600 hover:bg-gray-200"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          Overview
+        </a>
+        <a
+          routerLink="status"
+          routerLinkActive="bg-white text-blue-600 font-semibold shadow-sm"
+          class="px-4 py-2 rounded-t-md border border-b-0 bg-gray-100 text-gray-600 hover:bg-gray-200"
+        >
+          Status
+        </a>
+        <a
+          routerLink="browser"
+          routerLinkActive="bg-white text-blue-600 font-semibold shadow-sm"
+          class="px-4 py-2 rounded-t-md border border-b-0 bg-gray-100 text-gray-600 hover:bg-gray-200"
+        >
+          Resource Browser
+        </a>
+      </div>
+
+      <div class="h-[1px] bg-gray-300 w-full mb-4"></div>
+
+      <!-- Aquí se cargarán los componentes hijos -->
+      <router-outlet></router-outlet>
+    </section>
+  </main>
+</div>

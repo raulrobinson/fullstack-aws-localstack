@@ -1,0 +1,59 @@
+<header class="px-6 py-4 bg-white border-b border-gray-200 shadow-sm flex justify-between items-center">
+  <h1 class="text-2xl font-semibold">Dashboard</h1>
+
+  <div class="flex items-center gap-6">
+    <!-- 🔔 Notificaciones -->
+    <div class="relative">
+      <!--<button (click)="toggleNotifications()" class="relative">
+        🔔
+        @if (unreadCount() > 0) {
+          <span
+            class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+            {{ unreadCount() }}
+          </span>
+        }
+      </button>
+
+      @if (showNotifications()) {
+        <div class="absolute right-0 mt-2 w-64 bg-white border rounded shadow-lg z-50 p-2 max-h-64 overflow-y-auto">
+          @if (messages().length === 0) {
+            <p class="text-sm text-gray-500">Sin notificaciones</p>
+          } @else {
+            <ul>
+              @for (msg of messages(); track msg) {
+                <li class="text-sm text-gray-800 py-1 border-b last:border-none">
+                  {{ msg }}
+                </li>
+              }
+            </ul>
+        }
+        </div>
+      }-->
+    </div>
+
+    <!-- Perfil -->
+    <div class="relative">
+      <div class="flex items-center gap-2 cursor-pointer" (click)="toggleMenu()">
+        <span class="text-sm text-gray-600">raul.bolivar.com</span>
+        <img
+          src="assets/images/16283868.png"
+          alt="User Avatar"
+          class="w-8 h-8 rounded-full border border-gray-300"
+        />
+      </div>
+
+      @if (showMenu()) {
+        <div class="absolute right-0 mt-2 w-40 bg-white rounded shadow-lg py-2 z-50">
+          <button
+            (click)="logout()"
+            class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</header>
+
+

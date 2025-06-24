@@ -1,0 +1,29 @@
+<div class="p-6 bg-white rounded shadow">
+  <div class="mx-4 my-4 text-sm text-gray-600">
+    LocalStack version: <strong>{{ health()?.version }}</strong> ({{ health()?.edition }})
+  </div>
+
+  @if (health(); as h) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+      @for (key of Object.keys(h.services || {}); track key) {
+        <div
+          (click)="navigateIfRunning(key)"
+          class="rounded p-3 flex items-center justify-between border transition"
+          [class.cursor-pointer]="h.services[key] === 'running'"
+          [class.border-green-400]="h.services[key] === 'running'"
+          [class.bg-green-50]="h.services[key] === 'running'"
+          [class.border-gray-300]="h.services[key] !== 'running'"
+          [class.bg-gray-100]="h.services[key] !== 'running'"
+          [class.cursor-not-allowed]="h.services[key] !== 'running'"
+        >
+          <span class="font-medium">{{ key }}</span>
+          <span class="text-sm">
+            {{ getStatusEmoji(h.services[key]) }} {{ h.services[key] }}
+          </span>
+        </div>
+      }
+    </div>
+  } @else {
+  <p class="text-gray-500 text-sm">Cargando estado...</p>
+}
+</div>
