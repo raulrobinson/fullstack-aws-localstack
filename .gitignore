@@ -135,3 +135,5 @@ e2e/*.map
 # System Files
 .DS_Store/
 
+data
+package-lock.json
