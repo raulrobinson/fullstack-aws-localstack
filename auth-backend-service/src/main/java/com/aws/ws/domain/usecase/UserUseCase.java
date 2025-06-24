@@ -1,11 +1,13 @@
 package com.aws.ws.domain.usecase;
 
 import com.aws.ws.domain.api.UserAdapter;
+import com.aws.ws.domain.exception.BusinessException;
 import com.aws.ws.domain.exception.DuplicateResourceException;
 import com.aws.ws.domain.exception.InvalidValueException;
 import com.aws.ws.domain.exception.TechnicalMessage;
 import com.aws.ws.domain.model.User;
 import com.aws.ws.domain.spi.UserServicePort;
+import com.aws.ws.infrastructure.common.exception.NotFoundException;
 import reactor.core.publisher.Mono;
 
 public class UserUseCase implements UserServicePort {
@@ -42,7 +44,7 @@ public class UserUseCase implements UserServicePort {
         }
 
         return userAdapter.findUserByEmail(email)
-                .switchIfEmpty(Mono.error(new RuntimeException("User not found with email: " + email)));
+                .switchIfEmpty(Mono.error(new NotFoundException(TechnicalMessage.NOT_FOUND, "User not found with email: ", email)));
     }
 
 //    @Override

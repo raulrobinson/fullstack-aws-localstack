@@ -5,6 +5,7 @@ import com.aws.ws.infrastructure.common.handler.GlobalErrorHandler;
 import com.aws.ws.infrastructure.common.util.JwtUtil;
 import com.aws.ws.infrastructure.inbound.dto.LoginRequest;
 import com.aws.ws.infrastructure.inbound.dto.UserDTO;
+import com.aws.ws.infrastructure.inbound.enums.Roles;
 import com.aws.ws.infrastructure.inbound.mapper.UserMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -78,9 +79,9 @@ public class UserHandler {
                     UserDTO userDTO = new UserDTO();
                     userDTO.setEmail(login.getEmail());
                     userDTO.setPassword(passwordEncoder.encode(login.getPassword()));
-                    userDTO.setFirstName("DefaultFirstName");
-                    userDTO.setLastName("DefaultLastName");
-                    userDTO.setRole("USER");
+                    userDTO.setFirstName(login.getFirstName());
+                    userDTO.setLastName(login.getLastName());
+                    userDTO.setRole(Roles.USER.getRoleName());
 
                     return servicePort.createUser(mapper.toDomain(userDTO))
                             .flatMap(createdUser -> ServerResponse.status(HttpStatus.CREATED).bodyValue(createdUser));
