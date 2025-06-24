@@ -19,19 +19,20 @@ public class UserUseCase implements UserServicePort {
     @Override
     public Mono<User> createUser(User domain) {
         if (domain.getEmail() == null || domain.getPassword() == null ||
-            domain.getFirstName() == null || domain.getLastName() == null || domain.getRole() == null) {
-            return Mono.error(new InvalidValueException("User ID, firstName, lastName, email, password and Role", "must not be null"));
+                domain.getFirstName() == null || domain.getLastName() == null || domain.getRole() == null) {
+            return Mono.error(new InvalidValueException(
+                    "User ID, firstName, lastName, email, password and Role",
+                    "must not be null"
+            ));
         }
 
         return userAdapter.findUserByEmail(domain.getEmail())
-                .flatMap(exists -> {
-                    if (exists != null) {
-                        return Mono.error(new DuplicateResourceException(
-                                TechnicalMessage.ALREADY_EXISTS, "User already exists with email: ", domain.getEmail()));
-                    } else {
-                        return userAdapter.createUser(domain);
-                    }
-                });
+                .flatMap((User user) -> Mono.<User>error(new DuplicateResourceException(
+                        TechnicalMessage.ALREADY_EXISTS,
+                        "User already exists with email: ",
+                        domain.getEmail()
+                )))
+                .switchIfEmpty(Mono.defer(() -> userAdapter.createUser(domain)));
     }
 
     @Override

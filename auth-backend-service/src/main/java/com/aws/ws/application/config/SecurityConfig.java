@@ -1,5 +1,6 @@
 package com.aws.ws.application.config;
 
+import com.aws.ws.application.filter.JwtSecurityFilter;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -9,7 +10,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -32,6 +36,12 @@ public class SecurityConfig {
 //    @Value("${jwt.private.key}")
 //    private RSAPrivateKey privateKey;
 
+    private final JwtSecurityFilter jwtSecurityFilter;
+
+    public SecurityConfig(JwtSecurityFilter jwtSecurityFilter) {
+        this.jwtSecurityFilter = jwtSecurityFilter;
+    }
+
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         return http
@@ -42,16 +52,25 @@ public class SecurityConfig {
                         .pathMatchers("/webjars/**").permitAll()
                         .pathMatchers("/api-docs/**").permitAll()
                         .pathMatchers("/actuator/**").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/v1/users").authenticated()
-                        .pathMatchers(HttpMethod.GET, "/v1/users/{email}").authenticated()
+                        .pathMatchers(HttpMethod.POST, "/api/users/login").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/users/register").permitAll()
+                        .pathMatchers("/api/users/**").authenticated()
+//                        .pathMatchers(HttpMethod.POST, "/v1/users").authenticated()
+//                        .pathMatchers(HttpMethod.GET, "/v1/users/{email}").authenticated()
                         .anyExchange().authenticated()
                 )
+                .addFilterAt(jwtSecurityFilter, SecurityWebFiltersOrder.AUTHENTICATION)
 //                .oauth2ResourceServer(oauth2 -> oauth2
 //                        .jwt(jwt -> jwt
 //                                .jwkSetUri(jwkSetUri)
 //                        )
 //                )
                 .build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
 //    @Bean

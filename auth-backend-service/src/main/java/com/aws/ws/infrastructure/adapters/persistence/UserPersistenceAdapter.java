@@ -3,15 +3,18 @@ package com.aws.ws.infrastructure.adapters.persistence;
 import com.aws.ws.domain.api.UserAdapter;
 import com.aws.ws.domain.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class UserPersistenceAdapter implements UserAdapter {
 
@@ -30,6 +33,7 @@ public class UserPersistenceAdapter implements UserAdapter {
         if (user.getID() == null) {
             user.setID(UUID.randomUUID().toString());
         }
+        log.info("Creating user with ID: {}", user.getID());
 
         PutItemRequest request = PutItemRequest.builder()
                 .tableName(tableName)
@@ -52,13 +56,24 @@ public class UserPersistenceAdapter implements UserAdapter {
         ScanRequest request = ScanRequest.builder()
                 .tableName(tableName)
                 .filterExpression("email = :emailVal")
-                .expressionAttributeValues(Map.of(":emailVal", AttributeValue.builder().s(email).build()))
+                .expressionAttributeValues(Map.of(
+                        ":emailVal", AttributeValue.builder().s(email).build()
+                ))
                 .build();
 
         return Mono.fromFuture(() -> client.scan(request))
-                .map(ScanResponse::items)
-                .mapNotNull(items -> items.isEmpty() ? null : convert(items.getFirst()));
+                .flatMap(scanResponse -> {
+                    List<Map<String, AttributeValue>> items = scanResponse.items();
+                    if (items == null || items.isEmpty()) {
+                        log.info("✅ No user found with email: {}", email);
+                        return Mono.empty();
+                    }
+                    log.info("✅ User found: {}", items.getFirst());
+                    return Mono.just(convert(items.getFirst()));
+                })
+                .doOnError(e -> log.error("❌ Error scanning DynamoDB for email {}: {}", email, e.getMessage()));
     }
+
 
     private User convert(Map<String, AttributeValue> item) {
         User user = new User();
