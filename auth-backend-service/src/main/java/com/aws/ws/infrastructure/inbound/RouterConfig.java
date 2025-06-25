@@ -66,7 +66,7 @@ public class RouterConfig {
                         .POST("/login", accept(MediaType.APPLICATION_JSON), userHandler::login)
 //                        .GET("/me", userHandler::getProfile) // requiere JWT
 //                        .PUT("/update", userHandler::updateUser) // requiere JWT
-//                        .POST("/logout", userHandler::logout) // requiere JWT
+                        .POST("/logout", userHandler::logout) // requiere JWT
                 )
                 .build();
     }

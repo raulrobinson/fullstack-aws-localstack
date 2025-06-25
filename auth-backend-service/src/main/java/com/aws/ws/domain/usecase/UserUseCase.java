@@ -57,4 +57,26 @@ public class UserUseCase implements UserServicePort {
                 .onErrorResume(e -> Mono.error(new BusinessException(
                         TechnicalMessage.BAD_REQUEST.getMessage(), "Error saving token: ", e.getMessage())));
     }
+
+    @Override
+    public Mono<Boolean> logout(String jwt) {
+        if (jwt == null || jwt.isEmpty()) {
+            return Mono.error(new InvalidValueException("JWT", "must not be null or empty"));
+        }
+
+        return userAdapter.logout(jwt)
+                .onErrorResume(e -> Mono.error(new BusinessException(
+                        TechnicalMessage.BAD_REQUEST.getMessage(), "Error during logout: ", e.getMessage())));
+    }
+
+    @Override
+    public Mono<Boolean> existsTokenByJwt(String jwt) {
+        if (jwt == null || jwt.isEmpty()) {
+            return Mono.error(new InvalidValueException("JWT", "must not be null or empty"));
+        }
+
+        return userAdapter.existsTokenByJwt(jwt)
+                .onErrorResume(e -> Mono.error(new BusinessException(
+                        TechnicalMessage.BAD_REQUEST.getMessage(), "Error checking token existence: ", e.getMessage())));
+    }
 }

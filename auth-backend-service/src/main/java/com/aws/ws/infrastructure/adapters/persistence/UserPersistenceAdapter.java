@@ -146,4 +146,86 @@ public class UserPersistenceAdapter implements UserAdapter {
                 .then(); // Mono<Void>
     }
 
+    @Override
+    public Mono<Boolean> existsTokenByJwt(String jwt) {
+        ScanRequest request = ScanRequest.builder()
+                .tableName(tableTokens)
+                .filterExpression("#tk = :jwtVal")
+                .expressionAttributeNames(Map.of(
+                        "#tk", UserDefinition.TOKEN_JWT // Esto debe ser "token"
+                ))
+                .expressionAttributeValues(Map.of(
+                        ":jwtVal", AttributeValue.builder().s(jwt).build()
+                ))
+                .build();
+
+        return Mono.fromFuture(() -> client.scan(request))
+                .flatMap(scanResponse -> {
+                    List<Map<String, AttributeValue>> items = scanResponse.items();
+                    if (items == null || items.isEmpty()) {
+                        log.info("✅ No token found with JWT: {}", jwt);
+                        return Mono.just(false);
+                    }
+                    log.info("✅ Token found: {}", items.getFirst());
+                    return Mono.just(true);
+                })
+                .doOnError(e -> log.error("❌ Error scanning DynamoDB for JWT {}: {}", jwt, e.getMessage()));
+    }
+
+    @Override
+    public Mono<Boolean> logout(String jwt) {
+        log.info("Logging out user with JWT: {}", jwt);
+        return existsTokenByJwt(jwt)
+                .flatMap(exists -> {
+                    if (!exists) {
+                        log.warn("❌ No active token found for JWT: {}", jwt);
+                        return Mono.just(false);
+                    }
+                    return deactivateActiveTokensByJwt(jwt)
+                            .thenReturn(true);
+                });
+    }
+
+    private Mono<Boolean> deactivateActiveTokensByJwt(String jwt) {
+//        log.info("Filter: {}", "#t = :jwtVal AND #active = :activeVal");
+//        log.info("AttrNames: {}", Map.of("#t", UserDefinition.TOKEN_JWT, "#active", UserDefinition.TOKEN_ACTIVE));
+//        log.info("AttrValues: {}", Map.of(":jwtVal", jwt, ":activeVal", true));
+
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName(tableTokens)
+                .filterExpression("#tk = :jwtVal AND #active = :activeVal")
+                .expressionAttributeNames(Map.of(
+                        "#tk", "token",
+                        "#active", "active"
+                ))
+                .expressionAttributeValues(Map.of(
+                        ":jwtVal", AttributeValue.builder().s(jwt).build(),
+                        ":activeVal", AttributeValue.builder().bool(true).build()
+                ))
+                .build();
+
+        return Mono.fromFuture(() -> client.scan(scanRequest))
+                .flatMapMany(response -> Flux.fromIterable(response.items()))
+                .flatMap(item -> {
+                    String tokenId = item.get(UserDefinition.TOKEN_ID).s();
+
+                    Map<String, AttributeValueUpdate> updates = Map.of(
+                            UserDefinition.TOKEN_ACTIVE, AttributeValueUpdate.builder()
+                                    .value(AttributeValue.builder().bool(false).build())
+                                    .action(AttributeAction.PUT)
+                                    .build()
+                    );
+
+                    UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                            .tableName(tableTokens)
+                            .key(Map.of(
+                                    UserDefinition.TOKEN_ID, AttributeValue.builder().s(tokenId).build()
+                            ))
+                            .attributeUpdates(updates)
+                            .build();
+
+                    return Mono.fromFuture(() -> client.updateItem(updateRequest)).then();
+                })
+                .then(Mono.just(true));
+    }
 }

@@ -11,4 +11,8 @@ public interface UserAdapter {
     Mono<User> findUserByEmail(String email);
 
     Mono<Boolean> saveToken(Token token);
+
+    Mono<Boolean> existsTokenByJwt(String jwt);
+
+    Mono<Boolean> logout(String jwt);
 }

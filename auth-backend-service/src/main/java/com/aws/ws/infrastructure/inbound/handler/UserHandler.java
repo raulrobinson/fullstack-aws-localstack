@@ -75,4 +75,27 @@ public class UserHandler {
                         }));
     }
 
+    public Mono<ServerResponse> logout(ServerRequest request) {
+        String token = request.headers().firstHeader("Authorization");
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ServerResponse.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String jwt = token.substring(7); // Remove "Bearer " prefix
+        return servicePort.existsTokenByJwt(jwt)
+                .flatMap(existingToken -> servicePort.logout(jwt)
+                        .flatMap(success -> {
+                            if (success) {
+                                return ServerResponse.ok().bodyValue(Map.of(
+                                        "message", "Logout successful",
+                                        "messageId", getMessageId(request)
+                                ));
+                            } else {
+                                return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .bodyValue(Map.of("error", "Failed to logout"));
+                            }
+                        }))
+                .switchIfEmpty(ServerResponse.status(HttpStatus.UNAUTHORIZED).build())
+                .doOnError(error -> log.error("❌ Error during logout: {}", error.getMessage()))
+                .onErrorResume(exception -> globalErrorHandler.handle(exception, getMessageId(request)));
+    }
 }
