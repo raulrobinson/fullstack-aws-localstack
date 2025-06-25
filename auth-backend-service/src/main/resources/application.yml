@@ -3,7 +3,9 @@ aws:
   region: us-east-1
   dynamodb:
     endpoint: http://localhost:4566
-    table-name: Users
+    table:
+      users: Users
+      tokens: Tokens
   secret:
     access-key: test
     key-id: test

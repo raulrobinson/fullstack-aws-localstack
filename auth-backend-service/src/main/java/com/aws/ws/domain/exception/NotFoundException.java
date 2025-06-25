@@ -1,6 +1,5 @@
-package com.aws.ws.infrastructure.common.exception;
+package com.aws.ws.domain.exception;
 
-import com.aws.ws.domain.exception.TechnicalMessage;
 import lombok.Getter;
 
 @Getter

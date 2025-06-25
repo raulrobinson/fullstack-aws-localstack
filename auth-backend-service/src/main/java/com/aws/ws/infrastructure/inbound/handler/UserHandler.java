@@ -1,11 +1,10 @@
 package com.aws.ws.infrastructure.inbound.handler;
 
+import com.aws.ws.domain.model.Token;
 import com.aws.ws.domain.spi.UserServicePort;
 import com.aws.ws.infrastructure.common.handler.GlobalErrorHandler;
 import com.aws.ws.infrastructure.common.util.JwtUtil;
 import com.aws.ws.infrastructure.inbound.dto.LoginRequest;
-import com.aws.ws.infrastructure.inbound.dto.UserDTO;
-import com.aws.ws.infrastructure.inbound.enums.Roles;
 import com.aws.ws.infrastructure.inbound.mapper.UserMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +16,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -34,29 +34,11 @@ public class UserHandler {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-//    // Method to handle fetching user by ID
-//    public Mono<ServerResponse> getByUserId(ServerRequest request) {
-//        String userId = request.pathVariable("userId");
-//        return servicePort.getByUserId(userId)
-//                .flatMap(user -> ServerResponse.ok().bodyValue(user))
-//                .doOnError(error -> log.error("Error fetching user with ID {}: {}", userId, error.getMessage()))
-//                .onErrorResume(exception -> globalErrorHandler.handle(exception, getMessageId(request)));
-//    }
-
-    public Mono<ServerResponse> createUser(ServerRequest request) {
-        log.debug("Creating new user");
-        return request.bodyToMono(UserDTO.class)
-                .flatMap(userDTO -> servicePort.createUser(mapper.toDomain(userDTO)))
-                .flatMap(user -> ServerResponse.status(HttpStatus.CREATED).bodyValue(user))
-                .doOnError(error -> log.error("Error creating user: {}", error.getMessage()))
-                .onErrorResume(exception -> globalErrorHandler.handle(exception, getMessageId(request)));
-    }
-
-    public Mono<ServerResponse> findUserByEmail(ServerRequest request) {
-        String email = request.pathVariable("email");
-        return servicePort.findUserByEmail(email)
-                .flatMap(user -> ServerResponse.ok().bodyValue(user))
-                .doOnError(error -> log.error("Error finding user with email {}: {}", email, error.getMessage()))
+    public Mono<ServerResponse> register(ServerRequest request) {
+        return request.bodyToMono(LoginRequest.class)
+                .flatMap(login -> servicePort.createUser(mapper.toDomain(login))
+                        .flatMap(createdUser -> ServerResponse.status(HttpStatus.CREATED).bodyValue(createdUser)))
+                .doOnError(error -> log.error("❌ Error registering user: {}", error.getMessage()))
                 .onErrorResume(exception -> globalErrorHandler.handle(exception, getMessageId(request)));
     }
 
@@ -64,31 +46,33 @@ public class UserHandler {
         return request.bodyToMono(LoginRequest.class)
                 .flatMap(login -> servicePort.findUserByEmail(login.getEmail())
                         .flatMap(user -> {
-                            if (passwordEncoder.matches(login.getPassword(), user.getPassword())) {
-                                String token = jwtUtil.generateToken(user.getEmail(), List.of(user.getRole()));
-                                return ServerResponse.ok().bodyValue(Map.of("token", token));
-                            } else {
+                            if (!passwordEncoder.matches(login.getPassword(), user.getPassword())) {
                                 return ServerResponse.status(HttpStatus.UNAUTHORIZED).build();
                             }
+
+                            String token = jwtUtil.generateToken(user.getEmail(), List.of(user.getRole()));
+
+                            Token tokenToSave = Token.builder()
+                                    .jwt(token)
+                                    .userId(user.getUserId())
+                                    .issuedAt(Instant.now())
+                                    .expiresAt(Instant.now().plusSeconds(3600))
+                                    .active(true)
+                                    .build();
+
+                            return servicePort.saveToken(tokenToSave)
+                                    .flatMap(success -> {
+                                        if (success) {
+                                            return ServerResponse.ok().bodyValue(Map.of(
+                                                    "token", token,
+                                                    "messageId", getMessageId(request)
+                                            ));
+                                        } else {
+                                            return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                                    .bodyValue(Map.of("error", "Failed to save token"));
+                                        }
+                                    });
                         }));
     }
-
-    public Mono<ServerResponse> register(ServerRequest request) {
-        return request.bodyToMono(LoginRequest.class)
-                .flatMap(login -> {
-                    UserDTO userDTO = new UserDTO();
-                    userDTO.setEmail(login.getEmail());
-                    userDTO.setPassword(passwordEncoder.encode(login.getPassword()));
-                    userDTO.setFirstName(login.getFirstName());
-                    userDTO.setLastName(login.getLastName());
-                    userDTO.setRole(Roles.USER.getRoleName());
-
-                    return servicePort.createUser(mapper.toDomain(userDTO))
-                            .flatMap(createdUser -> ServerResponse.status(HttpStatus.CREATED).bodyValue(createdUser));
-                })
-                .doOnError(error -> log.error("❌ Error registering user: {}", error.getMessage()))
-                .onErrorResume(exception -> globalErrorHandler.handle(exception, getMessageId(request)));
-    }
-
 
 }

@@ -13,9 +13,4 @@ public class BeanConfig {
         return new UserUseCase(userAdapter);
     }
 
-//    @Bean
-//    public CatalogPersistenceAdapter catalogPersistenceAdapter(DynamoDbAsyncClient client) {
-//        return new CatalogPersistenceAdapter(client);
-//    }
-
 }

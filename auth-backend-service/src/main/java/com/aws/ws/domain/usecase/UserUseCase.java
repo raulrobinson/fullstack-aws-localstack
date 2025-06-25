@@ -1,13 +1,10 @@
 package com.aws.ws.domain.usecase;
 
 import com.aws.ws.domain.api.UserAdapter;
-import com.aws.ws.domain.exception.BusinessException;
-import com.aws.ws.domain.exception.DuplicateResourceException;
-import com.aws.ws.domain.exception.InvalidValueException;
-import com.aws.ws.domain.exception.TechnicalMessage;
+import com.aws.ws.domain.exception.*;
+import com.aws.ws.domain.model.Token;
 import com.aws.ws.domain.model.User;
 import com.aws.ws.domain.spi.UserServicePort;
-import com.aws.ws.infrastructure.common.exception.NotFoundException;
 import reactor.core.publisher.Mono;
 
 public class UserUseCase implements UserServicePort {
@@ -47,9 +44,17 @@ public class UserUseCase implements UserServicePort {
                 .switchIfEmpty(Mono.error(new NotFoundException(TechnicalMessage.NOT_FOUND, "User not found with email: ", email)));
     }
 
-//    @Override
-//    public Mono<User> getByUserId(String userId) {
-//        return userAdapter.getByUserId(userId)
-//                .switchIfEmpty(Mono.error(new RuntimeException("User not found with id: " + userId)));
-//    }
+    @Override
+    public Mono<Boolean> saveToken(Token token) {
+        if (token == null || token.getUserId() == null || token.getJwt() == null) {
+            return Mono.error(new InvalidValueException(
+                    "User ID and Token",
+                    "must not be null"
+            ));
+        }
+
+        return userAdapter.saveToken(token)
+                .onErrorResume(e -> Mono.error(new BusinessException(
+                        TechnicalMessage.BAD_REQUEST.getMessage(), "Error saving token: ", e.getMessage())));
+    }
 }

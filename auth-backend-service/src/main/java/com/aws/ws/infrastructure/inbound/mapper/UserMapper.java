@@ -1,19 +1,23 @@
 package com.aws.ws.infrastructure.inbound.mapper;
 
 import com.aws.ws.domain.model.User;
-import com.aws.ws.infrastructure.inbound.dto.UserDTO;
+import com.aws.ws.infrastructure.inbound.dto.LoginRequest;
+import com.aws.ws.infrastructure.inbound.enums.Roles;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class UserMapper {
-    public User toDomain(UserDTO userDTO) {
-        if (userDTO == null) return null;
+
+    public User toDomain(LoginRequest user) {
+        if (user == null) return null;
         return User.builder()
-                .email(userDTO.getEmail())
-                .firstName(userDTO.getFirstName())
-                .lastName(userDTO.getLastName())
-                .password(userDTO.getPassword())
-                .role(userDTO.getRole())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .password(user.getPassword())
+                .role(Roles.USER.getRoleName())
                 .build();
     }
 }

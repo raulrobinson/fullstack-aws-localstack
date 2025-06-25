@@ -1,10 +1,15 @@
 package com.aws.ws.infrastructure.adapters.persistence;
 
 import com.aws.ws.domain.api.UserAdapter;
+import com.aws.ws.domain.model.Token;
 import com.aws.ws.domain.model.User;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.aws.ws.infrastructure.adapters.persistence.constants.UserDefinition;
+import com.aws.ws.infrastructure.adapters.persistence.mapper.UserPersistenceMapper;
+import com.aws.ws.infrastructure.inbound.enums.Roles;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
@@ -16,34 +21,41 @@ import java.util.UUID;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserPersistenceAdapter implements UserAdapter {
 
-    @Value("${aws.dynamodb.table-name}")
-    private String tableName;
+    @Value("${aws.dynamodb.table.users}")
+    private String tableUsers;
+
+    @Value("${aws.dynamodb.table.tokens}")
+    private String tableTokens;
 
     private final DynamoDbAsyncClient client;
-    private final ObjectMapper mapper = new ObjectMapper();
-
-    public UserPersistenceAdapter(DynamoDbAsyncClient client) {
-        this.client = client;
-    }
+    private final PasswordEncoder passwordEncoder;
+    private final UserPersistenceMapper mapper;
 
     @Override
     public Mono<User> createUser(User user) {
-        if (user.getID() == null) {
-            user.setID(UUID.randomUUID().toString());
+        if (user.getUserId() == null) {
+            user.setUserId(UUID.randomUUID().toString());
         }
-        log.info("Creating user with ID: {}", user.getID());
+        log.info("Creating user with ID: {}", user.getUserId());
+
+        User newUser = new User();
+        newUser.setEmail(user.getEmail());
+        newUser.setPassword(passwordEncoder.encode(user.getPassword()));
+        newUser.setFirstName(user.getFirstName());
+        newUser.setLastName(user.getLastName());
 
         PutItemRequest request = PutItemRequest.builder()
-                .tableName(tableName)
+                .tableName(tableUsers)
                 .item(Map.of(
-                        "ID", AttributeValue.builder().s(user.getID()).build(),
-                        "email", AttributeValue.builder().s(user.getEmail()).build(),
-                        "firstName", AttributeValue.builder().s(user.getFirstName()).build(),
-                        "lastName", AttributeValue.builder().s(user.getLastName()).build(),
-                        "password", AttributeValue.builder().s(user.getPassword()).build(),
-                        "role", AttributeValue.builder().s(user.getRole()).build()
+                        UserDefinition.USER_ID, AttributeValue.builder().s(user.getUserId()).build(),
+                        UserDefinition.USER_EMAIL, AttributeValue.builder().s(newUser.getEmail()).build(),
+                        UserDefinition.USER_FIRSTNAME, AttributeValue.builder().s(newUser.getFirstName()).build(),
+                        UserDefinition.USER_LASTNAME, AttributeValue.builder().s(newUser.getLastName()).build(),
+                        UserDefinition.USER_PASSWORD, AttributeValue.builder().s(newUser.getPassword()).build(),
+                        UserDefinition.USER_ROLE, AttributeValue.builder().s(Roles.USER.getRoleName()).build()
                 ))
                 .build();
 
@@ -54,8 +66,8 @@ public class UserPersistenceAdapter implements UserAdapter {
     @Override
     public Mono<User> findUserByEmail(String email) {
         ScanRequest request = ScanRequest.builder()
-                .tableName(tableName)
-                .filterExpression("email = :emailVal")
+                .tableName(tableUsers)
+                .filterExpression(UserDefinition.USER_EMAIL + " = :emailVal")
                 .expressionAttributeValues(Map.of(
                         ":emailVal", AttributeValue.builder().s(email).build()
                 ))
@@ -69,74 +81,35 @@ public class UserPersistenceAdapter implements UserAdapter {
                         return Mono.empty();
                     }
                     log.info("✅ User found: {}", items.getFirst());
-                    return Mono.just(convert(items.getFirst()));
+                    return Mono.just(mapper.toUser(items.getFirst()));
                 })
                 .doOnError(e -> log.error("❌ Error scanning DynamoDB for email {}: {}", email, e.getMessage()));
     }
 
+    @Override
+    public Mono<Boolean> saveToken(Token token) {
+        if (token.getTokenId() == null) {
+            token.setTokenId(UUID.randomUUID().toString());
+        }
+        log.info("Creating token with Token ID: {}", token.getTokenId());
 
-    private User convert(Map<String, AttributeValue> item) {
-        User user = new User();
-        user.setID(item.get("ID").s());
-        user.setEmail(item.get("email").s());
-        user.setFirstName(item.get("firstName").s());
-        user.setLastName(item.get("lastName").s());
-        user.setPassword(item.get("password").s());
-        user.setRole(item.get("role").s());
-        return user;
+        PutItemRequest request = PutItemRequest.builder()
+                .tableName(tableTokens)
+                .item(Map.of(
+                        UserDefinition.TOKEN_ID, AttributeValue.builder().s(token.getTokenId()).build(),
+                        UserDefinition.TOKEN_USER_ID, AttributeValue.builder().s(token.getUserId()).build(),
+                        UserDefinition.TOKEN_JWT, AttributeValue.builder().s(token.getJwt()).build(),
+                        UserDefinition.TOKEN_CREATED_DATE, AttributeValue.builder().s(token.getIssuedAt().toString()).build(),
+                        UserDefinition.TOKEN_EXPIRATION_DATE, AttributeValue.builder().s(token.getExpiresAt().toString()).build(),
+                        UserDefinition.TOKEN_ACTIVE, AttributeValue.builder().bool(token.isActive()).build()
+                ))
+                .build();
+
+        return Mono.fromFuture(() -> client.putItem(request))
+                .then(Mono.just(true))
+                .onErrorResume(error -> {
+                    log.error("❌ Error saving token: {}", error.getMessage());
+                    return Mono.just(false);
+                });
     }
-
-//    @Override
-//    public Mono<Boolean> existsByEmail(String email) {
-//        Map<String, AttributeValue> key = new HashMap<>();
-//        key.put("email", AttributeValue.builder().s(email).build());
-//
-//        GetItemRequest request = GetItemRequest.builder()
-//                .tableName(tableName)
-//                .key(key)
-//                .build();
-//
-//        CompletableFuture<GetItemResponse> future = client.getItem(request);
-//
-//        return Mono.fromFuture(future)
-//                .map(GetItemResponse::hasItem)
-//                .onErrorReturn(false); // Si ocurre un error, asumimos que el usuario no existe
-//    }
-//
-//    @Override
-//    public Mono<User> getByUserId(String userId) {
-//        Map<String, AttributeValue> key = new HashMap<>();
-//        key.put("ID", AttributeValue.builder().s(userId).build());
-//
-//        GetItemRequest request = GetItemRequest.builder()
-//                .tableName(tableName)
-//                .key(key)
-//                .build();
-//
-//        CompletableFuture<GetItemResponse> future = client.getItem(request);
-//
-//        return Mono.fromFuture(future)
-//                .handle((response, sink) -> {
-//                    if (!response.hasItem()) {
-//                        sink.error(new NotFoundException(
-//                                TechnicalMessage.NOT_FOUND, "Catalog not found with catalogId: ", userId));
-//                        return;
-//                    }
-//
-//                    Map<String, AttributeValue> item = response.item();
-//
-//                    User user = new User();
-//                    //user.setCatalogId(item.get("ID").s()); // ✅ ID for catalogId
-//                    // user.setCatalogName(item.get("catalogName").s());
-//
-//                    try {
-//                        String itemsJson = item.get("items").s();
-//                        //user.setItems(mapper.readValue(itemsJson, new TypeReference<>() {}));
-//                    } catch (Exception e) {
-//                        sink.error(new RuntimeException("Error parsing items", e));
-//                        return;
-//                    }
-//                    sink.next(user);
-//                });
-//    }
 }
