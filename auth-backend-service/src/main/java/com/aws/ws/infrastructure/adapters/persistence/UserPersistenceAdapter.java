@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
@@ -93,23 +94,56 @@ public class UserPersistenceAdapter implements UserAdapter {
         }
         log.info("Creating token with Token ID: {}", token.getTokenId());
 
-        PutItemRequest request = PutItemRequest.builder()
+        // 1. Desactivar tokens anteriores
+        return deactivateActiveTokensByUserId(token.getUserId())
+                // 2. Guardar el nuevo token
+                .then(Mono.fromFuture(() -> client.putItem(
+                        PutItemRequest.builder()
+                                .tableName(tableTokens)
+                                .item(Map.of(
+                                        UserDefinition.TOKEN_ID, AttributeValue.builder().s(token.getTokenId()).build(),
+                                        UserDefinition.TOKEN_USER_ID, AttributeValue.builder().s(token.getUserId()).build(),
+                                        UserDefinition.TOKEN_JWT, AttributeValue.builder().s(token.getJwt()).build(),
+                                        UserDefinition.TOKEN_CREATED_DATE, AttributeValue.builder().s(token.getIssuedAt().toString()).build(),
+                                        UserDefinition.TOKEN_EXPIRATION_DATE, AttributeValue.builder().s(token.getExpiresAt().toString()).build(),
+                                        UserDefinition.TOKEN_ACTIVE, AttributeValue.builder().bool(true).build()
+                                ))
+                                .build()
+                ))).thenReturn(true);
+    }
+
+    private Mono<Void> deactivateActiveTokensByUserId(String userId) {
+        ScanRequest scanRequest = ScanRequest.builder()
                 .tableName(tableTokens)
-                .item(Map.of(
-                        UserDefinition.TOKEN_ID, AttributeValue.builder().s(token.getTokenId()).build(),
-                        UserDefinition.TOKEN_USER_ID, AttributeValue.builder().s(token.getUserId()).build(),
-                        UserDefinition.TOKEN_JWT, AttributeValue.builder().s(token.getJwt()).build(),
-                        UserDefinition.TOKEN_CREATED_DATE, AttributeValue.builder().s(token.getIssuedAt().toString()).build(),
-                        UserDefinition.TOKEN_EXPIRATION_DATE, AttributeValue.builder().s(token.getExpiresAt().toString()).build(),
-                        UserDefinition.TOKEN_ACTIVE, AttributeValue.builder().bool(token.isActive()).build()
+                .filterExpression("userId = :uid AND active = :act")
+                .expressionAttributeValues(Map.of(
+                        ":uid", AttributeValue.builder().s(userId).build(),
+                        ":act", AttributeValue.builder().bool(true).build()
                 ))
                 .build();
 
-        return Mono.fromFuture(() -> client.putItem(request))
-                .then(Mono.just(true))
-                .onErrorResume(error -> {
-                    log.error("❌ Error saving token: {}", error.getMessage());
-                    return Mono.just(false);
-                });
+        return Mono.fromFuture(() -> client.scan(scanRequest))
+                .flatMapMany(response -> Flux.fromIterable(response.items()))
+                .flatMap(item -> {
+                    String tokenId = item.get(UserDefinition.TOKEN_ID).s(); // ✅ se usa la constante correctamente
+                    Map<String, AttributeValueUpdate> updates = Map.of(
+                            "active", AttributeValueUpdate.builder()
+                                    .value(AttributeValue.builder().bool(false).build())
+                                    .action(AttributeAction.PUT)
+                                    .build()
+                    );
+
+                    UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                            .tableName(tableTokens)
+                            .key(Map.of(
+                                    UserDefinition.TOKEN_ID, AttributeValue.builder().s(tokenId).build() // ✅ clave correcta
+                            ))
+                            .attributeUpdates(updates)
+                            .build();
+
+                    return Mono.fromFuture(() -> client.updateItem(updateRequest)).then();
+                })
+                .then(); // Mono<Void>
     }
+
 }

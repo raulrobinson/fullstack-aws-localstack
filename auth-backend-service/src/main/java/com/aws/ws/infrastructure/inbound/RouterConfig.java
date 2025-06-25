@@ -18,7 +18,7 @@ public class RouterConfig {
     @RouterOperations({
             // Define the route for user login
             @org.springdoc.core.annotations.RouterOperation(
-                    path = "/api/users/login",
+                    path = "/api/auth/login",
                     produces = "application/json",
                     method = org.springframework.web.bind.annotation.RequestMethod.POST,
                     beanClass = UserHandler.class,
@@ -39,7 +39,7 @@ public class RouterConfig {
             ),
             // Define the route for user registration
             @org.springdoc.core.annotations.RouterOperation(
-                    path = "/api/users/register",
+                    path = "/api/auth/register",
                     produces = "application/json",
                     method = org.springframework.web.bind.annotation.RequestMethod.POST,
                     beanClass = UserHandler.class,
@@ -61,7 +61,7 @@ public class RouterConfig {
     })
     public RouterFunction<?> userRoutes(UserHandler userHandler) {
         return route()
-                .path("/api/users", builder -> builder
+                .path("/api/auth", builder -> builder
                         .POST("/register", accept(MediaType.APPLICATION_JSON), userHandler::register)
                         .POST("/login", accept(MediaType.APPLICATION_JSON), userHandler::login)
 //                        .GET("/me", userHandler::getProfile) // requiere JWT
