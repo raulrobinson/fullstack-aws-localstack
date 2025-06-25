@@ -6,6 +6,7 @@ import { ToastrService } from "ngx-toastr";
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { firstValueFrom } from 'rxjs';
+import {AuthService} from "@shared/services/auth.service";
 
 @Component({
   selector: 'app-login',
@@ -18,7 +19,10 @@ import { firstValueFrom } from 'rxjs';
   styleUrl: './login.component.scss'
 })
 export class LoginComponent implements OnInit {
-  username: string = '';
+  // Inyectamos el cliente HTTP para realizar peticiones al backend
+  private auth = inject(AuthService);
+
+  email: string = '';
   password: string = '';
   captchaInput: string = '';
   captchaSession: string = '';
@@ -63,13 +67,16 @@ export class LoginComponent implements OnInit {
       return;
     }*/
 
-    if (this.username === 'admin' && this.password === 'admin123') {
-      localStorage.setItem('auth', 'true');
-      this.toast.success('Inicio de sesión exitoso ✅');
-      setTimeout(() => this.router.navigate(['/']), 1000);
-    } else {
-      this.toast.error('Credenciales inválidas ❌');
-    }
+    this.auth.login(this.email, this.password).subscribe({
+      next: () => {
+        this.toast.success('Inicio de sesión exitoso ✅');
+        setTimeout(() => this.router.navigate(['/']), 1000);
+      },
+      error: (err) => {
+        console.error(err);
+        this.toast.error('Credenciales inválidas ❌');
+      },
+    });
   }
 
   async validateCaptcha(): Promise<boolean> {

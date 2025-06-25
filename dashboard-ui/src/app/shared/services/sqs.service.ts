@@ -1,17 +1,26 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { Observable } from 'rxjs';
-import { HttpClient } from "@angular/common/http";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
 
 @Injectable({
   providedIn: 'root'
 })
 export class SqsService {
   private http = inject(HttpClient);
+  private token = localStorage.getItem('auth_token');
 
   queues = signal<string[]>([]);
 
+  private getHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      'Authorization': `Bearer ${this.token}`,
+    });
+  }
+
   listQueues(): Observable<{ queues: string[] }> {
-    return this.http.get<{ queues: string[] }>('/api/sqs/list');
+    return this.http.get<{ queues: string[] }>('/api/sqs/list', {
+      headers: this.getHeaders()
+    });
   }
 
   fetchQueues() {

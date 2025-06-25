@@ -5,6 +5,7 @@ import { provideToastr } from "ngx-toastr";
 import { provideHttpClient } from '@angular/common/http';
 
 import { routes } from './app.routes';
+import { AuthInterceptor } from "@shared/guards/auth.interceptor";
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,7 +14,7 @@ export const appConfig: ApplicationConfig = {
       positionClass: 'toast-bottom-right',
       preventDuplicates: true,
     }),
-    importProvidersFrom(BrowserAnimationsModule),
+    importProvidersFrom(BrowserAnimationsModule, AuthInterceptor),
     provideHttpClient(),
     provideRouter(routes)
   ]
