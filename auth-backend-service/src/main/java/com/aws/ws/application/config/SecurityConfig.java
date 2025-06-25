@@ -54,6 +54,7 @@ public class SecurityConfig {
                         .pathMatchers("/actuator/**").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
 //                        .pathMatchers("/api/users/**").authenticated()
 //                        .pathMatchers(HttpMethod.POST, "/v1/users").authenticated()
 //                        .pathMatchers(HttpMethod.GET, "/v1/users/{email}").authenticated()
