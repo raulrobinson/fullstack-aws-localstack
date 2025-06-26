@@ -33,7 +33,21 @@ export const Resources = [
     description: 'Funciones Lambda',
     icon: 'assets/icons/Arch_AWS-Lambda_64.svg',
     route: '/lambda'
-  }
+  },
+  {
+    key: 'iam',
+    name: 'IAM',
+    description: 'Gestión de usuarios y permisos',
+    icon: 'assets/icons/Arch_AWS-Identity-and-Access-Management_64.svg',
+    route: '/iam'
+  },
+  {
+    key: 'logs',
+    name: 'LOGS',
+    description: 'CloudWatch Logs',
+    icon: 'assets/icons/Arch_Amazon-CloudWatch_64.svg',
+    route: '/logs'
+  },
 ];
 
 export const ServiceRouteMap: Record<string, string> = {
@@ -41,5 +55,7 @@ export const ServiceRouteMap: Record<string, string> = {
   s3: '/s3',
   sqs: '/sqs',
   sns: '/sns',
-  lambda: '/lambda'
+  lambda: '/lambda',
+  iam: '/iam',
+  logs: '/logs',
 };

@@ -2,7 +2,6 @@ import { Component, inject, signal } from '@angular/core';
 import { DynamodbService } from "@shared/services/dynamodb.service";
 import { JsonPipe } from "@angular/common";
 import { ToastrService } from 'ngx-toastr';
-import { ToastComponent } from "../../components/toast/toast.component";
 import { CreateClientFormComponent } from "./create-table/create-client-form/create-client-form.component";
 import { ConfirmDialogComponent } from "./confirm-dialog/confirm-dialog.component";
 import { LucideAngularModule, Trash } from 'lucide-angular';
@@ -12,7 +11,6 @@ import { LucideAngularModule, Trash } from 'lucide-angular';
   standalone: true,
   imports: [
     JsonPipe,
-    ToastComponent,
     CreateClientFormComponent,
     ConfirmDialogComponent,
     LucideAngularModule,
@@ -33,9 +31,6 @@ export class DynamodbComponent {
 
   // Utilidades
   readonly trash = Trash;
-  toastMessage = '';
-  toastType: 'success' | 'error' = 'success';
-  toastVisible = false;
 
   constructor() {
     this.fetchTables();
@@ -45,18 +40,11 @@ export class DynamodbComponent {
     window.location.reload();
   }
 
-  showToast(message: string, type: 'success' | 'error' = 'success') {
-    this.toastMessage = message;
-    this.toastType = type;
-    this.toastVisible = true;
-    setTimeout(() => (this.toastVisible = false), 3000);
-  }
-
   fetchTables() {
     this.loading.set(true);
     this.dynamodb.listTables().subscribe({
       next: (res) => this.tables.set(res.tables),
-      error: () => this.showToast('Error cargando tablas', 'error'),
+      error: () => this.toast.error('Error cargando tablas'),
       complete: () => this.loading.set(false),
     });
   }
@@ -65,18 +53,18 @@ export class DynamodbComponent {
     this.selectedTable.set(table);
     this.dynamodb.getItems(table).subscribe({
       next: (res) => this.items.set(res.items),
-      error: () => this.showToast('Error cargando items', 'error'),
+      error: () => this.toast.error('Error cargando items'),
     });
   }
 
   deleteTable(table: string) {
     // TO DO: llamar a dynamodb.deleteTable(table)
-    this.showToast(`Tabla "${table}" eliminada (simulado)`);
+    this.toast.success(`Tabla "${table}" eliminada (simulado)`);
   }
 
   deleteItem(item: any) {
     // TO DO: llamar a dynamodb.deleteItem(table, item)
-    this.showToast(`Item eliminado (simulado)`);
+    this.toast.success(`Item eliminado (simulado)`);
   }
 
   getFieldsForTable(table: string): string[] {

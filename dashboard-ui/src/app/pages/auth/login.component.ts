@@ -1,7 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { Router } from "@angular/router";
 import { FormsModule } from "@angular/forms";
-import { ToastComponent } from "../../components/toast/toast.component";
 import { ToastrService } from "ngx-toastr";
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -12,26 +11,21 @@ import { firstValueFrom } from 'rxjs';
   standalone: true,
   imports: [
     FormsModule,
-    ToastComponent
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
 export class LoginComponent implements OnInit {
+  public readonly router = inject(Router);
+  public readonly toast = inject(ToastrService);
+  public readonly http = inject(HttpClient);
+  public readonly sanitizer = inject(DomSanitizer);
+
   username: string = '';
   password: string = '';
   captchaInput: string = '';
   captchaSession: string = '';
   captchaSvg: string = '';
-
-  toastMessage = '';
-  toastType: 'success' | 'error' = 'success';
-  toastVisible = false;
-
-  public readonly router = inject(Router);
-  public readonly toast = inject(ToastrService);
-  public readonly http = inject(HttpClient);
-  public readonly sanitizer = inject(DomSanitizer);
 
   private readonly CAPTCHA_ENDPOINT = 'https://captcha-svc.vercel.app/api/v2/captcha';
 

@@ -1,53 +1,47 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import {Component, effect, inject, signal} from '@angular/core';
 import { SqsService } from "@shared/services/sqs.service";
-import {DynamodbService} from "@shared/services/dynamodb.service";
+import { FormsModule } from "@angular/forms";
+import { CommonModule } from "@angular/common";
+import {ToastrService} from "ngx-toastr";
 
 @Component({
   selector: 'app-sqs',
-  imports: [],
+  imports: [CommonModule, FormsModule],
   templateUrl: './sqs.html',
   standalone: true,
   styleUrl: './sqs.scss'
 })
-export class SqsComponent implements OnInit {
+export class SqsComponent {
+  public readonly toast = inject(ToastrService);
+  protected queues = this.sqsService.queues;
+  protected messages = this.sqsService.messages;
+  protected selectedQueue = signal<string>('');
+  protected messageBody = signal<string>('');
 
-  private sqsService = inject(SqsService);
+  constructor(private sqsService: SqsService) {
+    this.sqsService.fetchQueues();
 
-  constructor(public dynamo: DynamodbService, public sqs: SqsService) {
-    this.dynamo.fetchTables();
-    this.sqs.fetchQueues();
-  }
-
-  loadItems(table: string) {
-    this.dynamo.fetchItems(table);
-  }
-
-  /*private sqsService = inject(SqsService);
-
-  queues = signal<string[]>([]);
-  selectedQueue = signal<string | null>(null);
-  messageBody = signal('');
-  messages = signal<{ Body: string; MessageId: string }[]>([]);*/
-
-  /*constructor() {
-    //this.loadQueues();
-  }*/
-
-  ngOnInit() {
-    /*this.sqsService.listQueues().subscribe(res => {
-      console.log('Colas disponibles:', res.QueueUrls);
+    // Limpiar mensajes al cambiar de cola
+    effect(() => {
+      this.selectedQueue();
+      this.messages.set([]);
     });
-
-    this.sqsService.receiveMessages('http://localhost:4566/000000000000/my-queue')
-      .subscribe(res => {
-        console.log('Mensajes:', res.Messages);
-      });*/
   }
 
-  /*loadQueues() {
-    this.http.get<{ queues: string[] }>('/api/sqs/list').subscribe((res) => {
-      this.queues.set(res.queues);
-    });
-  }*/
+  sendMessage() {
+    const queue = this.selectedQueue();
+    const body = this.messageBody();
+    if (!queue || !body) return;
 
+    this.sqsService.sendMessage(queue, body).subscribe(() => {
+      this.toast.success('Mensaje enviado ✅');
+      this.messageBody.set('');
+    });
+  }
+
+  loadMessages() {
+    const queue = this.selectedQueue();
+    if (!queue) return;
+    this.sqsService.fetchMessages(queue);
+  }
 }

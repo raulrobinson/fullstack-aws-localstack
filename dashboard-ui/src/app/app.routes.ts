@@ -25,6 +25,8 @@ export const routes: Routes = [
       { path: 'sqs', component: SqsComponent },
       { path: 'sns', component: SnsComponent },
       { path: 'lambda', component: LambdaComponent },
+      { path: 'iam', loadComponent: () => import('./aws/iam/iam/iam').then(m => m.Iam) },
+      { path: 'logs', loadComponent: () => import('./aws/logs/logs/logs').then(m => m.Logs) },
       { path: '', redirectTo: 'overview', pathMatch: 'full' },
     ],
   },
