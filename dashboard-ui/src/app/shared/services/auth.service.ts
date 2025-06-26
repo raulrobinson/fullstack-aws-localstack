@@ -1,6 +1,6 @@
-import { inject, Injectable, signal } from '@angular/core';
+import {effect, inject, Injectable, signal} from '@angular/core';
 import { HttpClient, HttpHeaders } from "@angular/common/http";
-import { tap } from "rxjs";
+import {catchError, map, Observable, of, tap} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +16,11 @@ export class AuthService {
   isAuthenticated = signal<boolean>(false);
 
   constructor() {
-    this.isAuthenticated.set(this.hasValidToken());
+    effect(() => {
+      this.hasValidToken().subscribe(valid => {
+        this.isAuthenticated.set(valid);
+      });
+    });
   }
 
   login(email: string, password: string) {
@@ -56,9 +60,22 @@ export class AuthService {
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
-  hasValidToken(): boolean {
+  hasValidToken(): Observable<boolean> {
     const token = this.getToken();
-    // Opcional validar expiración
-    return !!token;
+    if (!token) return of(false);
+
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
+
+    return this.http.get<{ valid: boolean }>('/api/auth/validate', { headers }).pipe(
+      map(response => response.valid),
+      catchError(err => {
+        console.warn('❌ Token validation failed:', err);
+        return of(false);
+      })
+    );
   }
 }
