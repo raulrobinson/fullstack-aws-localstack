@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Data
 @Builder
@@ -15,7 +15,7 @@ public class Token {
     private String tokenId;      // puede ser UUID
     private String userId;
     private String jwt;
-    private Instant issuedAt;
-    private Instant expiresAt;
+    private ZonedDateTime issuedAt;
+    private ZonedDateTime expiresAt;
     private boolean active;      // marcarlo false en logout
 }

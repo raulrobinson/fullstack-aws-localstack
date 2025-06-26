@@ -64,9 +64,8 @@ public class RouterConfig {
                 .path("/api/auth", builder -> builder
                         .POST("/register", accept(MediaType.APPLICATION_JSON), userHandler::register)
                         .POST("/login", accept(MediaType.APPLICATION_JSON), userHandler::login)
-//                        .GET("/me", userHandler::getProfile) // requiere JWT
-//                        .PUT("/update", userHandler::updateUser) // requiere JWT
-                        .POST("/logout", userHandler::logout) // requiere JWT
+                        .GET("/validate", userHandler::validateJwt) // requiere JWT
+                        .POST("/logout", userHandler::logout)       // requiere JWT
                 )
                 .build();
     }

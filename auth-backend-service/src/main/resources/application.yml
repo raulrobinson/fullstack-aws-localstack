@@ -15,3 +15,8 @@ server:
 
 jwt:
   secret: "wN!as4kdpN98A2m3V9x7QqZLrP0f98A2m3V9x7QqZLGtYz"  # debe tener al menos 32 caracteres (256 bits)
+  expiration-time-sec: 30  # 30 segundos
+
+spring:
+  jackson:
+    time-zone: America/Bogota

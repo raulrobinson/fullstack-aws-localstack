@@ -1,6 +1,7 @@
 package com.aws.ws.domain.usecase;
 
-import com.aws.ws.domain.api.UserAdapter;
+import com.aws.ws.domain.api.JwtAdapterPort;
+import com.aws.ws.domain.api.UserAdapterPort;
 import com.aws.ws.domain.exception.*;
 import com.aws.ws.domain.model.Token;
 import com.aws.ws.domain.model.User;
@@ -9,10 +10,12 @@ import reactor.core.publisher.Mono;
 
 public class UserUseCase implements UserServicePort {
 
-    private final UserAdapter userAdapter;
+    private final UserAdapterPort userAdapter;
+    private final JwtAdapterPort jwtAdapter;
 
-    public UserUseCase(UserAdapter userAdapter) {
+    public UserUseCase(UserAdapterPort userAdapter, JwtAdapterPort jwtAdapter) {
         this.userAdapter = userAdapter;
+        this.jwtAdapter = jwtAdapter;
     }
 
     @Override
@@ -45,15 +48,15 @@ public class UserUseCase implements UserServicePort {
     }
 
     @Override
-    public Mono<Boolean> saveToken(Token token) {
-        if (token == null || token.getUserId() == null || token.getJwt() == null) {
+    public Mono<Boolean> saveToken(Token token, String email) {
+        if (token.getJwt() == null || email == null) {
             return Mono.error(new InvalidValueException(
-                    "User ID and Token",
+                    "Email and Token",
                     "must not be null"
             ));
         }
 
-        return userAdapter.saveToken(token)
+        return userAdapter.saveToken(token, email)
                 .onErrorResume(e -> Mono.error(new BusinessException(
                         TechnicalMessage.BAD_REQUEST.getMessage(), "Error saving token: ", e.getMessage())));
     }
@@ -78,5 +81,16 @@ public class UserUseCase implements UserServicePort {
         return userAdapter.existsTokenByJwt(jwt)
                 .onErrorResume(e -> Mono.error(new BusinessException(
                         TechnicalMessage.BAD_REQUEST.getMessage(), "Error checking token existence: ", e.getMessage())));
+    }
+
+    @Override
+    public Mono<Boolean> validateJwt(String jwt) {
+        if (jwt == null || jwt.isEmpty()) {
+            return Mono.error(new InvalidValueException("JWT", "must not be null or empty"));
+        }
+
+        return jwtAdapter.validateJwt(jwt)
+                .onErrorResume(e -> Mono.error(new BusinessException(
+                        TechnicalMessage.BAD_REQUEST.getMessage(), "Error validating JWT: ", e.getMessage())));
     }
 }

@@ -1,6 +1,6 @@
 package com.aws.ws.application.filter;
 
-import com.aws.ws.infrastructure.common.util.JwtUtil;
+import com.aws.ws.infrastructure.adapters.jwt.JwtAdapter;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpHeaders;
@@ -18,10 +18,10 @@ import reactor.core.publisher.Mono;
 @Component
 public class JwtSecurityFilter implements WebFilter {
 
-    private final JwtUtil jwtUtil;
+    private final JwtAdapter jwtAdapter;
 
-    public JwtSecurityFilter(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
+    public JwtSecurityFilter(JwtAdapter jwtAdapter) {
+        this.jwtAdapter = jwtAdapter;
     }
 
     @Override
@@ -32,11 +32,11 @@ public class JwtSecurityFilter implements WebFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             try {
                 String token = authHeader.substring(7);
-                Claims claims = jwtUtil.validateToken(token);
+                Claims claims = jwtAdapter.validateToken(token);
                 Authentication auth = new UsernamePasswordAuthenticationToken(
                         claims.getSubject(),
                         null,
-                        jwtUtil.extractRoles(token).stream().map(SimpleGrantedAuthority::new).toList()
+                        jwtAdapter.extractRoles(token).stream().map(SimpleGrantedAuthority::new).toList()
                 );
                 return chain.filter(exchange)
                         .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth));

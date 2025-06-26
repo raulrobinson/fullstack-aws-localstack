@@ -1,6 +1,6 @@
 package com.aws.ws.infrastructure.adapters.persistence;
 
-import com.aws.ws.domain.api.UserAdapter;
+import com.aws.ws.domain.api.UserAdapterPort;
 import com.aws.ws.domain.model.Token;
 import com.aws.ws.domain.model.User;
 import com.aws.ws.infrastructure.adapters.persistence.constants.UserDefinition;
@@ -16,14 +16,15 @@ import reactor.core.publisher.Mono;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserPersistenceAdapter implements UserAdapter {
+public class UserPersistenceAdapter implements UserAdapterPort {
 
     @Value("${aws.dynamodb.table.users}")
     private String tableUsers;
@@ -88,29 +89,35 @@ public class UserPersistenceAdapter implements UserAdapter {
     }
 
     @Override
-    public Mono<Boolean> saveToken(Token token) {
-        if (token.getTokenId() == null) {
-            token.setTokenId(UUID.randomUUID().toString());
-        }
-        log.info("Creating token with Token ID: {}", token.getTokenId());
+    public Mono<Boolean> saveToken(Token token, String email) {
+        return findUserByEmail(email)
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.error("❌ User not found for email: {}", email);
+                    return Mono.empty();
+                }))
+                .flatMap(user -> {
+                    log.info("✅ User found for email: {}", email);
 
-        // 1. Desactivar tokens anteriores
-        return deactivateActiveTokensByUserId(token.getUserId())
-                // 2. Guardar el nuevo token
-                .then(Mono.fromFuture(() -> client.putItem(
-                        PutItemRequest.builder()
-                                .tableName(tableTokens)
-                                .item(Map.of(
-                                        UserDefinition.TOKEN_ID, AttributeValue.builder().s(token.getTokenId()).build(),
-                                        UserDefinition.TOKEN_USER_ID, AttributeValue.builder().s(token.getUserId()).build(),
-                                        UserDefinition.TOKEN_JWT, AttributeValue.builder().s(token.getJwt()).build(),
-                                        UserDefinition.TOKEN_CREATED_DATE, AttributeValue.builder().s(token.getIssuedAt().toString()).build(),
-                                        UserDefinition.TOKEN_EXPIRATION_DATE, AttributeValue.builder().s(token.getExpiresAt().toString()).build(),
-                                        UserDefinition.TOKEN_ACTIVE, AttributeValue.builder().bool(true).build()
-                                ))
-                                .build()
-                ))).thenReturn(true);
+                    // 1. Desactivar tokens anteriores
+                    return deactivateActiveTokensByUserId(user.getUserId())
+                            // 2. Guardar el nuevo token
+                            .then(Mono.fromFuture(() -> client.putItem(
+                                    PutItemRequest.builder()
+                                            .tableName(tableTokens)
+                                            .item(Map.of(
+                                                    UserDefinition.TOKEN_ID, AttributeValue.builder().s(UUID.randomUUID().toString()).build(),
+                                                    UserDefinition.TOKEN_USER_ID, AttributeValue.builder().s(user.getUserId()).build(),
+                                                    UserDefinition.TOKEN_JWT, AttributeValue.builder().s(token.getJwt()).build(),
+                                                    UserDefinition.TOKEN_CREATED_DATE, AttributeValue.builder().s(String.valueOf(token.getIssuedAt())).build(),
+                                                    UserDefinition.TOKEN_EXPIRATION_DATE, AttributeValue.builder().s(String.valueOf(token.getExpiresAt())).build(),
+                                                    UserDefinition.TOKEN_ACTIVE, AttributeValue.builder().bool(true).build()
+                                            ))
+                                            .build()
+                            ))).thenReturn(true);
+                })
+                .defaultIfEmpty(false); // Devuelve false si el usuario no fue encontrado
     }
+
 
     private Mono<Void> deactivateActiveTokensByUserId(String userId) {
         ScanRequest scanRequest = ScanRequest.builder()
@@ -227,5 +234,48 @@ public class UserPersistenceAdapter implements UserAdapter {
                     return Mono.fromFuture(() -> client.updateItem(updateRequest)).then();
                 })
                 .then(Mono.just(true));
+    }
+
+    public Mono<Void> deactivateExpiredTokens() {
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.systemDefault()); // America/Bogota
+        log.info("Deactivating expired JWT: {}", now);
+
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName(tableTokens)
+                .filterExpression("active = :activeVal")
+                .expressionAttributeValues(Map.of(
+                        ":activeVal", AttributeValue.builder().bool(true).build()
+                ))
+                .build();
+
+        return Mono.fromFuture(() -> client.scan(scanRequest))
+                .flatMapMany(response -> Flux.fromIterable(response.items()))
+                .filter(item -> {
+                    String expiresAtStr = item.get(UserDefinition.TOKEN_EXPIRATION_DATE).s();
+                    ZonedDateTime expiresAt = ZonedDateTime.parse(expiresAtStr, DateTimeFormatter.ISO_ZONED_DATE_TIME);
+                    return expiresAt.isBefore(now);
+                })
+                .flatMap(expiredItem -> {
+                    String tokenId = expiredItem.get(UserDefinition.TOKEN_ID).s();
+                    Map<String, AttributeValueUpdate> updates = Map.of(
+                            UserDefinition.TOKEN_ACTIVE, AttributeValueUpdate.builder()
+                                    .value(AttributeValue.builder().bool(false).build())
+                                    .action(AttributeAction.PUT)
+                                    .build()
+                    );
+
+                    UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                            .tableName(tableTokens)
+                            .key(Map.of(
+                                    UserDefinition.TOKEN_ID, AttributeValue.builder().s(tokenId).build()
+                            ))
+                            .attributeUpdates(updates)
+                            .build();
+
+                    return Mono.fromFuture(() -> client.updateItem(updateRequest)).then();
+                })
+                .doOnComplete(() -> log.info("✅ Expired tokens deactivated successfully"))
+                .doOnError(error -> log.error("❌ Error during token cleanup: {}", error.getMessage()))
+                .then();
     }
 }

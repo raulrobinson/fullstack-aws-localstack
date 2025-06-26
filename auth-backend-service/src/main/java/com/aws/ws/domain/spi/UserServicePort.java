@@ -10,9 +10,11 @@ public interface UserServicePort {
 
     Mono<User> findUserByEmail(String email);
 
-    Mono<Boolean> saveToken(Token token);
+    Mono<Boolean> saveToken(Token token, String email);
 
     Mono<Boolean> logout(String jwt);
 
     Mono<Boolean> existsTokenByJwt(String jwt);
+
+    Mono<Boolean> validateJwt(String jwt);
 }
