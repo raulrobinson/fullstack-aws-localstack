@@ -1,5 +1,30 @@
 # AWS CLI Commands
 
+Example:
+Crear una instancia EC2 con un script de usuario para instalar Apache y PHP.
+
+Security Group:
+```text
+aws ec2 create-security-group \
+  --endpoint-url http://localhost:4566 \
+  --group-name my-sg \
+  --description "My test SG"
+```
+
+
+🛠️ Opción usando AWS CLI estándar con endpoint
+```text
+aws ec2 run-instances \
+  --endpoint-url http://localhost:4566 \
+  --region us-east-1 \
+  --image-id ami-df5de72bdb3b \
+  --count 1 \
+  --instance-type t3.nano \
+  --key-name my-key \
+  --security-group-ids <SECURITY_GROUP_ID> \
+  --user-data file://./user_script.sh
+```
+
 ## S3
 
 #### Create a new S3 bucket
