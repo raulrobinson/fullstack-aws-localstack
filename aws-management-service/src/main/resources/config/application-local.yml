@@ -1,0 +1,6 @@
+aws:
+  localstack-enabled: true
+  local-stack-url: http://localhost:4566
+  region: us-east-1
+  access-key-id: test
+  secret-access-key: test

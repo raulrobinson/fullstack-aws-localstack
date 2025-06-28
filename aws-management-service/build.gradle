@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.aws'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.7.0'
+
+    // AWS SDK dependencies
+    // https://mvnrepository.com/artifact/software.amazon.awssdk/dynamodb
+    implementation 'software.amazon.awssdk:dynamodb:2.31.68'
+    // https://mvnrepository.com/artifact/software.amazon.awssdk/s3
+    implementation 'software.amazon.awssdk:s3:2.31.68'
+    // https://mvnrepository.com/artifact/software.amazon.awssdk/sqs
+    implementation 'software.amazon.awssdk:sqs:2.31.68'
+    // https://mvnrepository.com/artifact/software.amazon.awssdk/sts
+    implementation 'software.amazon.awssdk:sts:2.31.68'
+    // https://mvnrepository.com/artifact/software.amazon.awssdk/iam
+    implementation 'software.amazon.awssdk:iam:2.31.68'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
