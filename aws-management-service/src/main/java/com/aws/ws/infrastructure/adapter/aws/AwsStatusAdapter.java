@@ -1,5 +1,6 @@
-package com.aws.ws.service;
+package com.aws.ws.infrastructure.adapter.aws;
 
+import com.aws.ws.domain.api.AwsStatusAdapterPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -11,12 +12,13 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class AwsStatusService {
+public class AwsStatusAdapter implements AwsStatusAdapterPort {
 
     private final S3Client s3Client;
     private final DynamoDbClient dynamoDbClient;
     private final SqsClient sqsClient;
 
+    @Override
     public Map<String, Object> getAwsStatus() {
         Map<String, Object> status = new HashMap<>();
 

@@ -1,5 +1,6 @@
-package com.aws.ws.service;
+package com.aws.ws.infrastructure.adapter.aws;
 
+import com.aws.ws.domain.api.AwsIdentityAdapterPort;
 import com.aws.ws.dto.AwsIdentityDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -7,10 +8,11 @@ import software.amazon.awssdk.services.sts.StsClient;
 
 @Service
 @RequiredArgsConstructor
-public class AwsIdentityService {
+public class AwsIdentityAdapter implements AwsIdentityAdapterPort {
 
     private final StsClient stsClient;
 
+    @Override
     public AwsIdentityDto getCallerIdentity() {
         var identity = stsClient.getCallerIdentity();
         String arn = identity.arn();

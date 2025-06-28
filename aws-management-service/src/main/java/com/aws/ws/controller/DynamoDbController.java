@@ -1,23 +1,23 @@
 package com.aws.ws.controller;
 
-import com.aws.ws.dto.DynamoTableDto;
-import com.aws.ws.service.DynamoDbService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-
-@RestController
-@RequestMapping("/aws/dynamodb")
-@RequiredArgsConstructor
+//@RestController
+//@RequestMapping("/aws/dynamodb")
+//@Tag(name = "DynamoDB Management", description = "Endpoints for managing DynamoDB tables")
+//@RequiredArgsConstructor
 public class DynamoDbController {
 
-    private final DynamoDbService dynamoDbService;
+//    private final DynamoDbAdapterPort dynamoDbService;
 
-    @GetMapping("/tables")
-    public List<DynamoTableDto> listTables() {
-        return dynamoDbService.listTables();
-    }
+//    @GetMapping("/tables")
+//    @Operation(description = "List all DynamoDB tables")
+//    public Mono<List<DynamoTableDto>> listTables() {
+//        return dynamoDbService.listTables();
+//    }
+
+//    @GetMapping("/scan/{tableName}")
+//    @Operation(description = "Scan a DynamoDB table by name")
+//    @Parameter(name = "tableName", description = "Name of the DynamoDB table to scan", required = true)
+//    public Mono<List<DynamoItemDto>> scanTable(@PathVariable String tableName) {
+//        return dynamoDbService.scanTable(tableName);
+//    }
 }

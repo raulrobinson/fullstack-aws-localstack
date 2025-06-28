@@ -1,4 +1,4 @@
-package com.aws.ws.config;
+package com.aws.ws.application.config;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

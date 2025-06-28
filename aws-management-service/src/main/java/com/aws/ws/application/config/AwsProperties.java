@@ -1,4 +1,4 @@
-package com.aws.ws.config;
+package com.aws.ws.application.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

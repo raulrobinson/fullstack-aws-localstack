@@ -1,10 +1,10 @@
-package com.aws.ws.dto;
+package com.aws.ws.domain.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class DynamoTableDto {
+public class DynamoTable {
     private String tableName;
 }
