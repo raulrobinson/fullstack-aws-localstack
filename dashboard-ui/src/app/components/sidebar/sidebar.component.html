@@ -1,4 +1,4 @@
-<nav class="px-4 space-y-2">
+<!--<nav class="px-4 space-y-2">
   <a href="#" class="flex items-center gap-3 px-3 py-2 rounded text-white hover:bg-[#2a2c33] transition">
     <span class="material-icons">dashboard</span> Dashboard
   </a>
@@ -8,4 +8,41 @@
   <a href="#" class="flex items-center gap-3 px-3 py-2 rounded text-white hover:bg-[#2a2c33] transition">
     <span class="material-icons">settings</span> Settings
   </a>
+</nav>-->
+
+<nav class="px-4 space-y-2">
+  <a href="#" class="flex items-center gap-3 px-3 py-2 rounded text-white hover:bg-[#2a2c33] transition">
+    <span class="material-icons">dashboard</span> Dashboard
+  </a>
+
+  <a href="/status" class="flex items-center gap-3 px-3 py-2 rounded text-white hover:bg-[#2a2c33] transition">
+    <span class="material-icons">storage</span> Status
+  </a>
+
+  <!-- Settings Toggle -->
+  <button
+    type="button"
+    (click)="toggleSettings()"
+    class="flex items-center justify-between w-full px-3 py-2 rounded text-white hover:bg-[#2a2c33] transition"
+  >
+    <span class="flex items-center gap-3">
+      <span class="material-icons">settings</span> Settings
+    </span>
+    <span class="material-icons text-sm">
+      {{ settingsOpen() ? 'expand_less' : 'expand_more' }}
+    </span>
+  </button>
+
+  <!-- Submenu: AWS Config -->
+  @if (settingsOpen()) {
+    <div class="ml-8 space-y-1 transition-all">
+      <a
+        routerLink="/aws-config"
+        class="block px-2 py-1 text-sm rounded text-white hover:bg-[#2a2c33] transition"
+      >
+        AWS Config
+      </a>
+    </div>
+  }
 </nav>
+

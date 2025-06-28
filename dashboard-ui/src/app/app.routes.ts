@@ -17,6 +17,10 @@ export const routes: Routes = [
     component: DashboardComponent,
     canActivate: [authGuard],
     children: [
+      { path: 'aws-config', loadComponent: () =>
+          import('./settings/aws-config.component')
+            .then(m => m.AwsConfigComponent)
+      },
       { path: 'overview', component: OverviewComponent },
       { path: 'status', component: StatusComponent },
       { path: 'browser', component: ResourceBrowserComponent },
