@@ -1,1 +1,54 @@
-<p>lambda.component works!</p>
+<div class="p-6 font-sans">
+  <!-- Header -->
+  <div class="text-center mb-6">
+    <h1 class="text-2xl font-bold flex justify-center items-center gap-4">
+      <img src="assets/images/Arch_AWS-Lambda_64.svg" alt="Lambda Logo" class="h-10" />
+      <span>Lambda Executor</span>
+    </h1>
+  </div>
+
+  <!-- Lista de funciones Lambda -->
+  <div class="mb-4">
+    <label class="block mb-2 font-medium">Selecciona una Lambda:</label>
+    <select
+      class="border p-2 rounded w-full"
+      [value]="selectedLambda()"
+      (change)="selectedLambda.set($any($event.target).value)"
+    >
+      <option value="" disabled>Seleccione una Lambda</option>
+      @for (lambda of lambdas(); track lambda.functionName) {
+        <option [value]="lambda.functionName">{{ lambda.functionName }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Payload de entrada -->
+  <div class="mb-4">
+    <label class="block mb-2 font-medium">Payload (JSON):</label>
+    <textarea
+      class="w-full border rounded p-2"
+      rows="6"
+      placeholder="{ }"
+      [value]="payload()"
+      (input)="payload.set($any($event.target).value)"
+    ></textarea>
+  </div>
+
+  <!-- Botón de ejecución -->
+  <button
+    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+    (click)="invoke()"
+  >
+    Ejecutar Lambda
+  </button>
+
+  <!-- Respuesta -->
+  <div class="mt-6">
+    <h3 class="font-semibold mb-2">Respuesta</h3>
+    @if (response()) {
+      <pre class="bg-gray-100 p-3 rounded text-sm whitespace-pre-wrap">{{ response() }}</pre>
+    } @else {
+      <p class="text-gray-400 text-sm">Sin respuesta aún</p>
+    }
+  </div>
+</div>

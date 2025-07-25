@@ -35,6 +35,8 @@ dependencies {
     implementation 'software.amazon.awssdk:s3:2.31.68'
     // https://mvnrepository.com/artifact/software.amazon.awssdk/sqs
     implementation 'software.amazon.awssdk:sqs:2.31.68'
+    // https://mvnrepository.com/artifact/software.amazon.awssdk/lambda
+    implementation 'software.amazon.awssdk:lambda:2.31.68'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

@@ -1,6 +1,7 @@
 package com.aws.ws.config;
 
 import com.aws.ws.handler.DynamoHandler;
+import com.aws.ws.handler.LambdaHandler;
 import com.aws.ws.handler.SqsHandler;
 import org.springdoc.core.annotations.RouterOperations;
 import org.springframework.context.annotation.Bean;
@@ -87,9 +88,39 @@ public class RouterConfig {
                                     in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH
                             )
                     )
+            ),
+            @org.springdoc.core.annotations.RouterOperation(
+                    path = "/api/lambda/invoke",
+                    method = RequestMethod.POST,
+                    beanClass = LambdaHandler.class,
+                    beanMethod = "invokeLambda",
+                    operation = @io.swagger.v3.oas.annotations.Operation(
+                            operationId = "invokeLambda",
+                            summary = "Invoke Lambda Function",
+                            description = "Invoke a specified AWS Lambda function.",
+                            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                                    required = true,
+                                    description = "Payload to send to the Lambda function"
+                            )
+                    )
+            ),
+            @org.springdoc.core.annotations.RouterOperation(
+                    path = "/api/lambda/invoke-async",
+                    method = RequestMethod.POST,
+                    beanClass = LambdaHandler.class,
+                    beanMethod = "invokeLambdaAsync",
+                    operation = @io.swagger.v3.oas.annotations.Operation(
+                            operationId = "invokeLambdaAsync",
+                            summary = "Invoke Lambda Function Asynchronously",
+                            description = "Invoke a specified AWS Lambda function asynchronously.",
+                            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                                    required = true,
+                                    description = "Payload to send to the Lambda function asynchronously"
+                            )
+                    )
             )
     })
-    public RouterFunction<ServerResponse> routes(SqsHandler sqs, DynamoHandler dynamo) {
+    public RouterFunction<ServerResponse> routes(SqsHandler sqs, DynamoHandler dynamo, LambdaHandler lambda) {
         return RouterFunctions
                 .route()
                 .path("/api/sqs", builder -> builder
@@ -101,6 +132,9 @@ public class RouterConfig {
                         .GET("/tables", dynamo::listTables)
                         .GET("/items/{table}", dynamo::listItems)
                 )
+                .POST("/api/lambda/invoke", lambda::invokeLambda)
+                .POST("/api/lambda/invoke-async", lambda::invokeLambdaAsync)
+                .GET("/api/lambda/list", lambda::listLambdas)
                 .build();
     }
 
